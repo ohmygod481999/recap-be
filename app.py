@@ -22,18 +22,15 @@ class Caption(db.Model):
     author_id = db.Column(db.Text())
     created_at = db.Column(db.DateTime, default=datetime.datetime.now())
     status = db.Column(db.Integer)
-    votes = db.Column(db.Integer)
 
-    def __init__(self, content, author_id, status, votes):
+    def __init__(self, content, author_id, status):
         self.content = content
         self.author_id = author_id
         self.status = status
-        self.votes = votes
-
 
 class CaptionSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'content', 'author_id', 'date', 'status', 'votes')
+        fields = ('id', 'content', 'author_id', 'date', 'status')
 
 
 caption_schema = CaptionSchema()
@@ -59,9 +56,8 @@ def add_caption():
     content = request.json['content']
     author_id = request.json['author_id']
     status = 0
-    votes = 0
 
-    caption = Caption(content, author_id, status, votes)
+    caption = Caption(content, author_id, status)
     db.session.add(caption)
     db.session.commit()
     return caption_schema.jsonify(caption)
