@@ -3,11 +3,15 @@ import datetime
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from dotenv import load_dotenv
+load_dotenv()
+import os
 
 app = Flask(__name__)
 
 # Khai báo kết nối Database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/recap'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
@@ -36,8 +40,13 @@ class CaptionSchema(ma.Schema):
 caption_schema = CaptionSchema()
 captions_schema = CaptionSchema(many=True)
 
+# db.create_all()
 
 @app.route('/')
+def get_index():
+    return "hello world"
+
+
 @app.route('/get-all-captions', methods=['GET'])
 def get_all_captions():  # put application's code here
     all_captions = Caption.query.all()
