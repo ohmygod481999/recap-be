@@ -121,12 +121,24 @@ def get_caption(id):
 def add_caption():
     content = request.json['content']
     author_id = request.json['author_id']
-    status = 0
+    status = request.json['status']
     category_id = request.json['category_id']
+    tag_ids = request.json['tag_ids']
 
+
+    # Thêm mới caption
     caption = Caption(content, author_id, status, category_id)
     db.session.add(caption)
     db.session.commit()
+
+    caption_id = caption.id
+
+    # thêm mới caption_tag
+    for tag_id in tag_ids:
+        caption_tag = CaptionTag(caption_id, tag_id)
+        db.session.add(caption_tag)
+        db.session.commit()
+
     return caption_schema.jsonify(caption)
 
 

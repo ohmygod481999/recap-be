@@ -8,8 +8,9 @@ class CaptionTag(db.Model):
     caption = db.relationship("Caption")
     tag = db.relationship("Tag")
 
-    def __init__(self, name):
-        self.content = name
+    def __init__(self, caption_id, tag_id):
+        self.caption_id = caption_id
+        self.tag_id = tag_id
 
 
 class CaptionTagSchema(ma.Schema):

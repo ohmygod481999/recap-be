@@ -13,7 +13,7 @@ class Caption(db.Model):
     category = db.relationship("Category")
     author = db.relationship("User")
 
-    def __init__(self, content, author_id, created_at, status, category_id):
+    def __init__(self, content, author_id, status, category_id):
         self.content = content
         self.author_id = author_id
         self.status = status
