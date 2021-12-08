@@ -10,7 +10,7 @@ def get_index():
     return "hello caption"
 
 
-@caption_controllers.route('/get-all-captions', methods=['GET'])
+@caption_controllers.route('/get-all', methods=['GET'])
 def get_all_captions():  # put application's code here
     all_captions = Caption.query.all()
     results = captions_schema.dump(all_captions)
@@ -23,13 +23,12 @@ def get_caption(id):
     return caption_schema.jsonify(caption)
 
 
-@caption_controllers.route('/add-caption', methods=['POST'])
+@caption_controllers.route('/add', methods=['POST'])
 def add_caption():
     content = request.json['content']
-    author_id = request.json['author_id']
     status = 0
 
-    caption = Caption(content, author_id, status)
+    caption = Caption(content, status)
     db.session.add(caption)
     db.session.commit()
     return caption_schema.jsonify(caption)

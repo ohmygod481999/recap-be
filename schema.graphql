@@ -1,0 +1,26 @@
+schema {
+    query: Query
+}
+
+type Caption {
+    id: ID!
+    content: String!
+    status: Int!
+}
+
+type CaptionsResponse {
+    success: Boolean!
+    errors: [String]
+    data: [Caption]
+}
+
+type CaptionResponse {
+    success: Boolean!
+    errors: [String]
+    data: Caption
+}
+
+type Query {
+    listCaptions: CaptionsResponse!
+    getCaption(id: ID!): CaptionResponse!
+}
