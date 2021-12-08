@@ -1,5 +1,6 @@
 schema {
     query: Query
+    mutation: Mutation
 }
 
 type Caption {
@@ -20,7 +21,19 @@ type CaptionResponse {
     data: Caption
 }
 
+type Response {
+    success: Boolean!
+    errors: [String]
+    data: String
+}
+
+
+
 type Query {
     listCaptions: CaptionsResponse!
     getCaption(id: ID!): CaptionResponse!
+}
+
+type Mutation {
+    addCaption(content: String!, status: Int!): Response!
 }

@@ -31,3 +31,19 @@ def getCaption_resolver(obj, info, id):
             "errors": [str(error)]
         }
     return payload
+
+def addCaption_resolver(obj, info, content, status):
+    try:
+        caption = Caption(content, status)
+        db.session.add(caption)
+        db.session.commit()
+        payload = {
+            "success": True,
+            "data": "Success"
+        }
+    except Exception as error:
+        payload = {
+            "success": False,
+            "errors": [str(error)]
+        }
+    return payload
