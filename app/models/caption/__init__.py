@@ -1,10 +1,14 @@
 from app.db import db, ma
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
+
 import datetime
 
 # Khai báo bảng Caption
 class Caption(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     content = db.Column(db.Text())
+    author_id = db.Column(UUID(as_uuid=True))
     created_at = db.Column(db.DateTime, default=datetime.datetime.now())
     status = db.Column(db.Integer)
 
@@ -14,7 +18,7 @@ class Caption(db.Model):
 
 class CaptionSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'content', 'date', 'status')
+        fields = ('id', 'content', 'author_id', 'created_at', 'status')
 
 
 caption_schema = CaptionSchema()

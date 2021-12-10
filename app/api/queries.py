@@ -3,7 +3,9 @@ from app.models.caption import Caption, caption_schema, captions_schema
 def listCaptions_resolver(obj, info):
     try:
         # posts = [post.to_dict() for post in Caption.query.all()]
+        print("run")
         all_captions = Caption.query.all()
+        print(all_captions)
         results = captions_schema.dump(all_captions)
         print(results)
         payload = {
