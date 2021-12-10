@@ -7,6 +7,8 @@ type Caption {
     id: ID!
     content: String!
     status: Int!
+    author_id: String
+    created_at: String
 }
 
 type CaptionsResponse {
