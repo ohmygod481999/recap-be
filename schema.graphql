@@ -11,10 +11,25 @@ type Caption {
     created_at: String
 }
 
+type Comment {
+    id: ID!
+    caption_id: ID!
+    user_id: ID!
+    parent_comment_id: ID!
+    content: String!
+    created_at: String
+}
+
 type CaptionsResponse {
     success: Boolean!
     errors: [String]
     data: [Caption]
+}
+
+type CommentsResponse {
+    success: Boolean!
+    errors: [String]
+    data: [Comment]
 }
 
 type CaptionResponse {
@@ -34,6 +49,7 @@ type Response {
 type Query {
     listCaptions: CaptionsResponse!
     getCaption(id: ID!): CaptionResponse!
+    listCommentOfCaption(caption_id: ID!): CommentsResponse!
 }
 
 type Mutation {

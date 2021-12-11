@@ -4,6 +4,7 @@ import uuid
 
 import datetime
 
+
 # Khai báo bảng Caption
 class Caption(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -11,16 +12,19 @@ class Caption(db.Model):
     author_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.now())
     status = db.Column(db.Integer)
+    category_id = db.Column(UUID(as_uuid=True), db.ForeignKey('category.id'))
 
-    def __init__(self, content, status, author_id, created_at):
+    def __init__(self, content, author_id, created_at, status, category_id):
         self.content = content
         self.status = status
         self.author_id = author_id
         self.created_at = created_at
+        self.category_id = category_id
+
 
 class CaptionSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'content', 'author_id', 'created_at', 'status')
+        fields = ('id', 'content', 'author_id', 'created_at', 'status', 'category_id')
 
 
 caption_schema = CaptionSchema()
