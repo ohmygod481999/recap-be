@@ -1,3 +1,4 @@
+from datetime import time
 from flask import Flask
 from dotenv import load_dotenv
 
@@ -6,12 +7,14 @@ from ariadne import load_schema_from_path, make_executable_schema, \
 from ariadne.constants import PLAYGROUND_HTML
 
 from flask import request, jsonify
-
+import redis
+import time
 import os
 
 load_dotenv()
 
 app = Flask(__name__)
+cache = redis.Redis(host='redis', port=6379)
 
 from app.graphql import query, schema
 # Khai báo kết nối Database
@@ -40,6 +43,18 @@ def graphql_server():
 
 # db.create_all()
 
+def get_hit_count():
+    retries = 5
+    while True:
+        try:
+            return cache.incr('hits')
+        except redis.exceptions.ConnectionError as exc:
+            if retries == 0:
+                raise exc 
+            retries -= 1
+            time.sleep(0.5)
+
 @app.route('/')
 def get_index():
-    return "hello world"
+    count = get_hit_count()
+    return "hello world , this website has been seen {} times.\n".format(count)

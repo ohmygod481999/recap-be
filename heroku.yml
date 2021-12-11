@@ -1,0 +1,10 @@
+setup:
+  addons:
+    - plan: Heroku-redis
+      as: redis
+build:
+  docker:
+    web: Dockerfile
+
+run:
+  web: gunicorn run:app
