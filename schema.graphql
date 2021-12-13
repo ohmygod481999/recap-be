@@ -20,6 +20,30 @@ type Comment {
     created_at: String
 }
 
+type Author {
+    id: String!
+    name: String!
+    avatar_url: String!
+}
+
+type CaptionNewFeed{
+    caption: Caption
+    vote_number: Int!
+    author: Author!
+}
+
+type AuthorResponse {
+    success: Boolean!
+    errors: [String]
+    data: Author
+}
+
+type CaptionsNewFeedResponse{
+    success: Boolean!
+    errors: [String]
+    data: [CaptionNewFeed]
+}
+
 type CaptionsResponse {
     success: Boolean!
     errors: [String]
@@ -44,12 +68,11 @@ type Response {
     data: String
 }
 
-
-
 type Query {
     listCaptions: CaptionsResponse!
     getCaption(id: ID!): CaptionResponse!
     listCommentOfCaption(caption_id: ID!): CommentsResponse!
+    getNewFeed: CaptionsResponse!
 }
 
 type Mutation {
