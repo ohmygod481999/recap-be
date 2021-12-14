@@ -9,6 +9,7 @@ type Caption {
     status: Int!
     author_id: String
     created_at: String
+    category_id: ID!
 }
 
 type Comment {
@@ -18,6 +19,12 @@ type Comment {
     parent_comment_id: ID!
     content: String!
     created_at: String
+}
+
+type Tag {
+    id: ID!
+    name: String!
+    caption: [Caption!]
 }
 
 type Author {
@@ -71,6 +78,7 @@ type Response {
 type Query {
     listCaptions: CaptionsResponse!
     getCaption(id: ID!): CaptionResponse!
+    relatedCaptions(id: ID!): CaptionsResponse!
     listCommentOfCaption(caption_id: ID!): CommentsResponse!
     getNewFeed: CaptionsResponse
 }
