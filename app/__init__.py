@@ -1,17 +1,19 @@
-from flask import Flask
+from datetime import time
+from flask import Flask, config
 from dotenv import load_dotenv
+from flask_caching import Cache
 
 from ariadne import load_schema_from_path, make_executable_schema, \
     graphql_sync, snake_case_fallback_resolvers, ObjectType
 from ariadne.constants import PLAYGROUND_HTML
 
 from flask import request, jsonify
-
 import os
 
 load_dotenv()
 
 app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE':'SimpleCache'})
 
 from app.graphql import query, schema
 # Khai báo kết nối Database
@@ -42,4 +44,4 @@ def graphql_server():
 
 @app.route('/')
 def get_index():
-    return "hello world"
+    return "hello phuong"

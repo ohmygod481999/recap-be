@@ -1,13 +1,14 @@
 from ariadne import load_schema_from_path, make_executable_schema, \
     graphql_sync, snake_case_fallback_resolvers, ObjectType
 
-from app.api.queries import listCaptions_resolver, getCaption_resolver, relatedCaptions_resolver
+from app.api.queries import listCaptions_resolver, getCaption_resolver, relatedCaptions_resolver, get_newfeed
 from app.api.mutations import add_caption_resolver
 
 query = ObjectType("Query")
 query.set_field("listCaptions", listCaptions_resolver)
 query.set_field("getCaption", getCaption_resolver)
 query.set_field("relatedCaptions", relatedCaptions_resolver)
+query.set_field("getNewFeed", get_newfeed)
 
 mutation = ObjectType("Mutation")
 mutation.set_field("addCaption", add_caption_resolver)
