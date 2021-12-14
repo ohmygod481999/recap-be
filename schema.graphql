@@ -72,7 +72,7 @@ type Query {
     listCaptions: CaptionsResponse!
     getCaption(id: ID!): CaptionResponse!
     listCommentOfCaption(caption_id: ID!): CommentsResponse!
-    getNewFeed: CaptionsResponse!
+    getNewFeed: CaptionsResponse
 }
 
 type Mutation {

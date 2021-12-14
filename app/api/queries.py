@@ -1,10 +1,13 @@
 from app.models.caption import Caption, caption_schema, captions_schema
+from app.models.user import User
+from app.models.voting import Voting
+from app.models.tag import Tag
 from .. import cache
 from random import randint
 from datetime import datetime 
 import time
 from operator import itemgetter, attrgetter
-
+from ..db import db
 def listCaptions_resolver(obj, info):
     try:
         # posts = [post.to_dict() for post in Caption.query.all()]
@@ -53,17 +56,14 @@ def addCaption_resolver(obj, info, content, status):
         }
     return payload
 
-def keySortTime(obj):
-    return time.mktime(datetime.strptime(obj['created_at'][:-6], "%Y-%m-%dT%H:%M:%S.%f").timetuple())
-
-@cache.cached(timeout=4, key_prefix='newfeed')
+@cache.cached(timeout=10, key_prefix='newfeed')
 def get_newfeed(obj, info):
     try:
-        all_captions = captions_schema.dump(Caption.query.all())
-        newest_captions = sorted(all_captions, key=keySortTime, reverse=True)[:100]
+        #all_captions = captions_schema.dump(Caption.query.order_by(Caption.created_at.desc()).limit(100))
+        query = captions_schema.dump(db.session.query(Caption).limit(10).all())
+        print(query)
         payload = {
-            "success": True,
-            "data": newest_captions
+            "success": True
         }
     except Exception as error:
         payload = {
