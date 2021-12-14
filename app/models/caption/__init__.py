@@ -9,7 +9,7 @@ import datetime
 class Caption(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     content = db.Column(db.Text())
-    author_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'))
+    author_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.now())
     status = db.Column(db.Integer)
     category_id = db.Column(UUID(as_uuid=True), db.ForeignKey('category.id'))
