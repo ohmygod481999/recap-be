@@ -9,7 +9,7 @@ query.set_field("listCaptions", listCaptions_resolver)
 query.set_field("getCaption", getCaption_resolver)
 query.set_field("relatedCaptions", relatedCaptions_resolver)
 query.set_field("getNewFeed", get_newfeed)
-query.set_field("getAuthor", getAuthor_resolver)
+query.set_field("userDetail", getAuthor_resolver)
 
 mutation = ObjectType("Mutation")
 mutation.set_field("addCaption", add_caption_resolver)
