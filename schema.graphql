@@ -27,9 +27,13 @@ type Tag {
     caption: [Caption!]
 }
 
+type CustomClaims {
+    isAdmin: Boolean
+}
+
 type Author {
     uid: String!
-    display_name: String!
+    display_name: String
     email: String!
     phone_number: String
     photo_url: String!
@@ -37,6 +41,7 @@ type Author {
     email_verified: Boolean!
     provider_id: String!
     tenant_id: String
+    custom_claims: CustomClaims
 }
 
 type CaptionNewFeed{
