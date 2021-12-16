@@ -1,6 +1,11 @@
 from app.db import db, ma
 from sqlalchemy.dialects.postgresql import UUID
+import firebase_admin
+from firebase_admin import credentials
 import uuid
+
+cred = credentials.Certificate("firebase-sdk.json")
+firebase_admin.initialize_app(cred)
 
 
 # Khai báo bảng Users

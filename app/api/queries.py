@@ -1,7 +1,9 @@
 from app.models.caption import Caption, captions_schema
 from app.models.caption_tag import CaptionTag
 from app.models.tag import Tag
+from app.models.users import Users, users_schema
 from app.db import db
+from firebase_admin.auth import GetUsersResult, get_user
 
 from .. import cache
 from random import randint
@@ -66,6 +68,21 @@ def relatedCaptions_resolver(obj, info, id):
         payload = {
             "success": True,
             "data": results
+        }
+    except Exception as error:
+        payload = {
+            "success": False,
+            "errors": [str(error)]
+        }
+    return payload
+
+
+def getAuthor_resolver(obj, info, firebase_uid):
+    try:
+        get_author = get_user(firebase_uid)
+        payload = {
+            "success": True,
+            "data": get_author
         }
     except Exception as error:
         payload = {

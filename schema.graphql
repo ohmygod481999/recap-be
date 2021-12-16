@@ -28,9 +28,9 @@ type Tag {
 }
 
 type Author {
-    id: String!
-    name: String!
-    avatar_url: String!
+    uid: String!
+    display_name: String!
+    photo_url: String!
 }
 
 type CaptionNewFeed{
@@ -81,6 +81,7 @@ type Query {
     relatedCaptions(id: ID!): CaptionsResponse!
     listCommentOfCaption(caption_id: ID!): CommentsResponse!
     getNewFeed: CaptionsResponse!
+    getAuthor(firebase_uid: String!): AuthorResponse!
 }
 
 type Mutation {
