@@ -26,6 +26,10 @@ class CaptionSchema(ma.Schema):
     class Meta:
         fields = ('id', 'content', 'author_id', 'created_at', 'status', 'category_id')
 
-
+class CaptionSchemaFireBase(ma.Schema):
+  class Meta:
+    fields = ('id', 'content', 'author_id', 'created_at', 'status', 'category_id', 'firebase_uid', 'tag_id', 'name')
 caption_schema = CaptionSchema()
 captions_schema = CaptionSchema(many=True)
+captionfirebase_schema = CaptionSchemaFireBase()
+captionfirebase_schemas = CaptionSchemaFireBase(many=True)

@@ -1,15 +1,18 @@
-from app.models.caption import Caption, captions_schema
+from app.models.caption import Caption, captions_schema, captionfirebase_schemas
+from app.models.users import Users, author_schema
 from app.models.caption_tag import CaptionTag
-from app.models.tag import Tag
+from app.models.tag import Tag, tags_schema
 from app.models.users import Users, users_schema
 from app.db import db
 from firebase_admin.auth import GetUsersResult, get_user
+from app.db import cacheNewFeed
 
 from .. import cache
 from random import randint
-from datetime import datetime 
+from datetime import datetime
 import time
 from operator import itemgetter, attrgetter
+
 
 def listCaptions_resolver(obj, info):
     try:
@@ -108,19 +111,36 @@ def addCaption_resolver(obj, info, content, status):
         }
     return payload
 
-def keySortTime(obj):
-    return time.mktime(datetime.strptime(obj['created_at'][:-6], "%Y-%m-%dT%H:%M:%S.%f").timetuple())
-
-@cache.cached(timeout=4, key_prefix='newfeed')
+@cache.cached(timeout=15, key_prefix='get_newfeed')
 def get_newfeed(obj, info):
+    start = time.time()
     try:
-        all_captions = captions_schema.dump(Caption.query.all())
-        newest_captions = sorted(all_captions, key=keySortTime, reverse=True)[:100]
+        all_captions = captionfirebase_schemas.dump(
+            db.session.query(
+                Caption.id,
+                Caption.content,
+                Caption.author_id,
+                Caption.created_at,
+                Caption.status,
+                Caption.category_id,
+                Users.firebase_uid)
+            .join(Users, Caption.author_id == Users.id)
+            .order_by(Caption.created_at.desc())
+            .limit(10)
+            .all()
+        )
+        for caption in all_captions:
+            caption['tag'] = tags_schema.dump(db.session.query(Tag.id, Tag.name).join(
+                CaptionTag, Tag.id == CaptionTag.tag_id).where(CaptionTag.caption_id == caption['id']).all())
+            caption['author'] = author_schema.dump(
+                get_user(caption['firebase_uid']))
+        print("Time Load: " + str(time.time() - start))
         payload = {
             "success": True,
-            "data": newest_captions
+            "data": all_captions
         }
     except Exception as error:
+        print(error)
         payload = {
             "success": False,
             "errors": [str(error)]
