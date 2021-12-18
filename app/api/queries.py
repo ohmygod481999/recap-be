@@ -111,8 +111,8 @@ def addCaption_resolver(obj, info, content, status):
         }
     return payload
 
-@cache.cached(timeout=15, key_prefix='get_newfeed')
-def get_newfeed(obj, info):
+@cache.memoize(100)
+def get_newfeed(obj, info, limit, offset):
     start = time.time()
     try:
         all_captions = captionfirebase_schemas.dump(
@@ -126,7 +126,8 @@ def get_newfeed(obj, info):
                 Users.firebase_uid)
             .join(Users, Caption.author_id == Users.id)
             .order_by(Caption.created_at.desc())
-            .limit(10)
+            .limit(int(limit))
+            .offset(int(offset))
             .all()
         )
         for caption in all_captions:

@@ -97,7 +97,7 @@ type Query {
     getCaption(id: ID!): CaptionResponse!
     relatedCaptions(id: ID!): CaptionsResponse!
     listCommentOfCaption(caption_id: ID!): CommentsResponse!
-    getNewFeed: CaptionsNewFeedResponse!
+    getNewFeed(limit: Int!, offset: Int!): CaptionsNewFeedResponse!
     userDetail(firebase_uid: String!): AuthorResponse!
 }
 
