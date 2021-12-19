@@ -1,5 +1,7 @@
 from app.models.caption import Caption, captions_schema, captionfirebase_schemas
 from app.models.users import Users, author_schema
+from app.models.voting import Voting, votings_schema
+from app.models.comment import Comment, comments_schema
 from app.models.caption_tag import CaptionTag
 from app.models.tag import Tag, tags_schema
 from app.models.users import Users, users_schema
@@ -53,7 +55,15 @@ def relatedCaptions_resolver(obj, info, id):
         # Lấy tất cả tag của caption hiện tại
         all_tags = CaptionTag.query.filter(CaptionTag.caption_id == id).all()
         # Lấy tất cả caption trừ caption hiện tại
-        all_captions = Caption.query.filter(Caption.id != id).all()
+        # all_captions = Caption.query.filter(Caption.id != id).all()
+        all_captions = db.session.query(
+                Caption.id,
+                Caption.content,
+                Caption.author_id,
+                Caption.created_at,
+                Caption.status,
+                Caption.category_id,
+                Users.firebase_uid).join(Users, Caption.author_id == Users.id).all()
         related_captions = []
         for caption in all_captions:
             dem = 0
@@ -67,7 +77,12 @@ def relatedCaptions_resolver(obj, info, id):
                 related_captions.append(caption)
             if len(related_captions) == 3:
                 break
-        results = captions_schema.dump(related_captions)
+        results = captionfirebase_schemas.dump(related_captions)
+        for caption in results:
+            caption['tag'] = tags_schema.dump(db.session.query(Tag.id, Tag.name).join(
+                CaptionTag, Tag.id == CaptionTag.tag_id).where(CaptionTag.caption_id == caption['id']).all())
+            caption['author'] = author_schema.dump(
+                get_user(caption['firebase_uid']))
         payload = {
             "success": True,
             "data": results
@@ -135,6 +150,13 @@ def get_newfeed(obj, info, limit, offset):
                 CaptionTag, Tag.id == CaptionTag.tag_id).where(CaptionTag.caption_id == caption['id']).all())
             caption['author'] = author_schema.dump(
                 get_user(caption['firebase_uid']))
+            votes = votings_schema.dump(db.session.query(Voting.id).where(Voting.caption_id == caption['id']).all())
+            comments = comments_schema.dump(db.session.query(Comment.id, Comment.content, Comment.created_at, Comment.user_id).where(Comment.caption_id == caption['id']).all())
+            for comment in comments:
+                childrenComments = comments_schema.dump(db.session.query(Comment.id, Comment.content, Comment.created_at, Comment.user_id).where(Comment.parent_comment_id == comment['id']).all())
+                comment["comments"] = childrenComments
+            caption['comments'] = comments
+            caption['vote_number'] = len(votes)
         print("Time Load: " + str(time.time() - start))
         payload = {
             "success": True,

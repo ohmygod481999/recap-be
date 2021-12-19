@@ -10,6 +10,7 @@ type Caption {
     author_id: String
     created_at: String
     category_id: ID!
+    author: Author
 }
 
 type Comment {
@@ -19,6 +20,7 @@ type Comment {
     parent_comment_id: ID!
     content: String!
     created_at: String
+    comments: [Comment]
 }
 
 type Tag {
@@ -44,6 +46,7 @@ type Author {
     custom_claims: CustomClaims
 }
 
+
 type CaptionNewFeed{
     id: ID!
     content: String!
@@ -51,6 +54,7 @@ type CaptionNewFeed{
     category_id: ID!
     status: Int!
     vote_number: Int
+    comments: [Comment]
     tag: [Tag]
     author: Author!
 }
