@@ -19,6 +19,9 @@ from app.graphql import query, schema
 # Khai báo kết nối Database
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
+
+app.config['UPLOAD_FOLDER'] = "file_upload"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from app.controllers.caption import caption_controllers

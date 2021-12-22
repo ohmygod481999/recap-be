@@ -1,8 +1,13 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, flash
+from app import app
 from app.models.caption import Caption, caption_schema, captions_schema
 from app.controllers.caption_image_recommendation.caption import caption_image_beam_search
+from app.controllers.caption_image_recommendation.translate import translate
+from werkzeug.utils import secure_filename
+import os
 import torch
 import json
+from app.models.caption import Caption, caption_schema, captions_schema
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -42,3 +47,51 @@ def get_index():
     words = [rev_word_map[ind] for ind in seq]
 
     return " ".join(words)
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@caption_image_recommendation_controllers.route("/recommend", methods=["POST"])
+def post_file():
+    response = {
+        "data": None,
+        "error": None,
+        "is_success": False
+    }
+
+    if 'file' not in request.files:
+        response["error"] = "no file found"
+        return jsonify(response)
+
+    file = request.files['file']
+
+    if file.filename == '':
+        response["error"] = "No selected file"
+        return jsonify(response)
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        seq, alphas = caption_image_beam_search(encoder, decoder, filepath, word_map, beam_size)
+        os.remove(filepath)
+        words = [rev_word_map[ind] for ind in seq[1:len(seq)-1]]
+
+        caption = " ".join(words)
+        translated_caption = translate(caption)
+
+        query_captions = Caption.query.all()
+        captions = captions_schema.dump(query_captions)
+
+        print(captions[:5])
+
+        response["is_success"] = True
+        response["data"] = translated_caption
+
+        return jsonify(response)
+
+    response["error"] = "File is not allowed"
+    return jsonify(response)
