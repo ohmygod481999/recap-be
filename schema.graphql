@@ -103,8 +103,10 @@ type Query {
     listCommentOfCaption(caption_id: ID!): CommentsResponse!
     getNewFeed(limit: Int!, offset: Int!): CaptionsNewFeedResponse!
     userDetail(firebase_uid: String!): AuthorResponse!
+
 }
 
 type Mutation {
     addCaption(content: String!, status: Int!): Response!
+    updateUser(uid: ID!, display_name: String, phone_number: String, photo_url: String): AuthorResponse!
 }

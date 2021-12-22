@@ -10,7 +10,6 @@ from firebase_admin.auth import GetUsersResult, get_user
 from app.db import cacheNewFeed
 
 from .. import cache
-from random import randint
 from datetime import datetime
 import time
 from operator import itemgetter, attrgetter
