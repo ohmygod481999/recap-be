@@ -22,6 +22,10 @@ class UsersSchema(ma.Schema):
     class Meta:
         fields = ('id', 'firebase_uid')
 
+class AuthorSchema(ma.Schema):
+  class Meta:
+    fields = ('uid', 'display_name', 'email', 'photo_url')
 
+author_schema = AuthorSchema()
 user_schema = UsersSchema()
 users_schema = UsersSchema(many=True)

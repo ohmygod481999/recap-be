@@ -10,6 +10,7 @@ type Caption {
     author_id: String
     created_at: String
     category_id: ID!
+    author: Author
 }
 
 type Comment {
@@ -19,6 +20,7 @@ type Comment {
     parent_comment_id: ID!
     content: String!
     created_at: String
+    comments: [Comment]
 }
 
 type Tag {
@@ -36,7 +38,7 @@ type Author {
     display_name: String
     email: String!
     phone_number: String
-    photo_url: String!
+    photo_url: String
     disabled: Boolean!
     email_verified: Boolean!
     provider_id: String!
@@ -44,9 +46,16 @@ type Author {
     custom_claims: CustomClaims
 }
 
+
 type CaptionNewFeed{
-    caption: Caption
-    vote_number: Int!
+    id: ID!
+    content: String!
+    created_at: String!
+    category_id: ID!
+    status: Int!
+    vote_number: Int
+    comments: [Comment]
+    tag: [Tag]
     author: Author!
 }
 
@@ -77,7 +86,8 @@ type CommentsResponse {
 type CaptionResponse {
     success: Boolean!
     errors: [String]
-    data: Caption
+    data: Caption!
+    author: Author!
 }
 
 type Response {
@@ -91,7 +101,7 @@ type Query {
     getCaption(id: ID!): CaptionResponse!
     relatedCaptions(id: ID!): CaptionsResponse!
     listCommentOfCaption(caption_id: ID!): CommentsResponse!
-    getNewFeed: CaptionsResponse!
+    getNewFeed(limit: Int!, offset: Int!): CaptionsNewFeedResponse!
     userDetail(firebase_uid: String!): AuthorResponse!
 }
 

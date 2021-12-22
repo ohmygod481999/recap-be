@@ -19,10 +19,15 @@ from app.graphql import query, schema
 # Khai báo kết nối Database
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
+
+app.config['UPLOAD_FOLDER'] = "file_upload"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from app.controllers.caption import caption_controllers
+from app.controllers.caption_image_recommendation import caption_image_recommendation_controllers
 app.register_blueprint(caption_controllers)
+app.register_blueprint(caption_image_recommendation_controllers)
 
 @app.route("/graphql", methods=["GET"])
 def graphql_playground():
