@@ -21,6 +21,8 @@ from app.graphql import query, schema
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
 
 app.config['UPLOAD_FOLDER'] = "file_upload"
+if not os.path.isdir(app.config['UPLOAD_FOLDER']):
+    os.mkdir(app.config['UPLOAD_FOLDER'])
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

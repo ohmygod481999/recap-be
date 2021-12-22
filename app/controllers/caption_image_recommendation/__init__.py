@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, flash
 from app import app
 from app.models.caption import Caption, caption_schema, captions_schema
-from app.controllers.caption_image_recommendation.caption import caption_image_beam_search
+from app.controllers.caption_image_recommendation.caption import caption_image_beam_search, CaptionRecommendation
 from app.controllers.caption_image_recommendation.translate import translate
 from werkzeug.utils import secure_filename
 import os
@@ -39,7 +39,12 @@ with open(word_map_path, 'r') as j:
 rev_word_map = {v: k for k, v in word_map.items()}  # ix2word
 
 # Encode, decode with attention and beam search
-
+query_captions = Caption.query.all()
+query_captions = db.session.query(
+        Caption.id,
+        Caption.content).all()
+captions = captions_schema.dump(query_captions)
+caption_decommendation = CaptionRecommendation(captions)
 
 @caption_image_recommendation_controllers.route("/")
 def get_index():
@@ -66,6 +71,10 @@ def post_file():
         return jsonify(response)
 
     file = request.files['file']
+    if request.form['num_cap']:
+        num_cap = int(request.form['num_cap'])
+    else:
+        num_cap = 5
 
     if file.filename == '':
         response["error"] = "No selected file"
@@ -83,13 +92,14 @@ def post_file():
         caption = " ".join(words)
         translated_caption = translate(caption)
 
-        query_captions = Caption.query.all()
-        captions = captions_schema.dump(query_captions)
-
-        print(captions[:5])
+        recommend_captions = caption_decommendation.recommend(translated_caption, num_cap)
+        
 
         response["is_success"] = True
-        response["data"] = translated_caption
+        response["data"] = {
+            "describe_image" : translated_caption,
+            "captions": recommend_captions
+        }
 
         return jsonify(response)
 
