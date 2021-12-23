@@ -3,13 +3,15 @@ from app import app
 from app.models.caption import Caption, caption_schema, captions_schema
 from app.models.tag import Tag, tags_schema
 from app.models.caption_tag import CaptionTag
-from app.controllers.caption_image_recommendation.caption import caption_image_beam_search, CaptionRecommendation
+from app.controllers.caption_image_recommendation.caption import caption_image_beam_search, CaptionRecommendation \
+    , EmotionSocialImageDetector
 from app.controllers.caption_image_recommendation.translate import translate
 from werkzeug.utils import secure_filename
 import os
 import torch
 import json
 from app.models.caption import Caption, caption_schema, captions_schema
+from PIL import Image
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -44,12 +46,15 @@ rev_word_map = {v: k for k, v in word_map.items()}  # ix2word
 query_captions = Caption.query.all()
 query_captions = db.session.query(
         Caption.id,
-        Caption.content).all()
+        Caption.content,
+        Caption.emotion).all()
 captions = captions_schema.dump(query_captions)
+print(captions[:2])
 for caption in captions:
     caption['tags'] = tags_schema.dump(db.session.query(Tag.id, Tag.name).join(
         CaptionTag, Tag.id == CaptionTag.tag_id).where(CaptionTag.caption_id == caption['id']).all())
 caption_decommendation = CaptionRecommendation(captions)
+emotionSocialImageDetector = EmotionSocialImageDetector()
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
@@ -82,6 +87,9 @@ def post_file():
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
+        image = Image.open(filepath)
+        
+        label_emotion = emotionSocialImageDetector.predict(image)
 
         seq, alphas = caption_image_beam_search(encoder, decoder, filepath, word_map, beam_size)
         os.remove(filepath)
@@ -90,13 +98,14 @@ def post_file():
         caption = " ".join(words)
         translated_caption = translate(caption)
 
-        recommend_captions = caption_decommendation.recommend(translated_caption, num_cap)
+        recommend_captions = caption_decommendation.recommend(translated_caption, emotionSocialImageDetector.classes[label_emotion], num_cap)
         
 
         response["is_success"] = True
         response["data"] = {
             "describe_image" : translated_caption,
-            "captions": recommend_captions
+            "captions": recommend_captions,
+            "emotion": emotionSocialImageDetector.classes[label_emotion],
         }
 
         return jsonify(response)

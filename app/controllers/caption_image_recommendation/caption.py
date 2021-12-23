@@ -1,4 +1,6 @@
 import torch
+from torch import nn
+import torchvision.models as models
 import torch.nn.functional as F
 import numpy as np
 import json
@@ -165,17 +167,46 @@ class CaptionRecommendation:
   def __init__(self, captions):
     self.captions = captions
 
-  def recommend(self, query_string, number):
-    similarities = [spacy_vi(query_string).similarity(spacy_vi(caption["content"])) for caption in self.captions]
+  # emotion: 'joy', 'sad'
+  def recommend(self, query_string, emotion, number):
+    emotion_index = 1 if emotion == 'joy' else 0
+    match_emotion_captions = [caption for caption in self.captions if caption['emotion'] == emotion_index]
+    similarities = [spacy_vi(query_string).similarity(spacy_vi(caption["content"])) for caption in match_emotion_captions]
     sort_index = np.argsort(similarities)
     results = []
     for i in range(len(similarities) - 1 ,len(similarities) - 1-number,-1):
         c = {
             "point": similarities[sort_index[i]],
-            "id": self.captions[sort_index[i]]["id"],
-            "content": self.captions[sort_index[i]]["content"],
-            "tags": self.captions[sort_index[i]]["tags"],
+            "id": match_emotion_captions[sort_index[i]]["id"],
+            "content": match_emotion_captions[sort_index[i]]["content"],
+            "tags": match_emotion_captions[sort_index[i]]["tags"],
         }
         results.append(c)
-        print(similarities[sort_index[i]], self.captions[sort_index[i]])
+        print(similarities[sort_index[i]], match_emotion_captions[sort_index[i]])
     return results
+
+class EmotionSocialImageDetector:
+  def __init__(self):
+    self.classes = ['joy', 'sad']
+    emotion_model = models.resnet50()
+    num_ftrs = emotion_model.fc.in_features
+    emotion_model.fc = nn.Linear(num_ftrs, len(self.classes))
+    emotion_model = emotion_model.to(device)
+    emotion_model.load_state_dict(torch.load(os.path.join("caption_model","emotion_model_resnet50.dat"), map_location='cpu'))
+    self.model = emotion_model
+    self.transform = transforms.Compose([
+      transforms.Resize(255),
+      transforms.CenterCrop(224),
+      transforms.ToTensor(),
+    ])
+    self.samples = torch.load(os.path.join("caption_model","samples.pt"), map_location=torch.device('cpu'))
+
+  def predict(self, image):
+    image = self.transform(image)
+    image = image.unsqueeze_(0).to(device)
+    with torch.no_grad():
+      images = torch.cat([image, self.samples], dim = 0)
+      pred = self.model(images)
+      pred = torch.argmax(pred[0])
+      return pred.item()
+      # return self.classes[pred.item()]
