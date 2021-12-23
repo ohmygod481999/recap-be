@@ -173,6 +173,7 @@ class CaptionRecommendation:
             "point": similarities[sort_index[i]],
             "id": self.captions[sort_index[i]]["id"],
             "content": self.captions[sort_index[i]]["content"],
+            "tags": self.captions[sort_index[i]]["tags"],
         }
         results.append(c)
         print(similarities[sort_index[i]], self.captions[sort_index[i]])

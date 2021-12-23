@@ -2,6 +2,7 @@ from datetime import time
 from flask import Flask, config
 from dotenv import load_dotenv
 from flask_caching import Cache
+from flask_cors import CORS
 
 from ariadne import load_schema_from_path, make_executable_schema, \
     graphql_sync, snake_case_fallback_resolvers, ObjectType
@@ -13,6 +14,7 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 cache = Cache(app, config={'CACHE_TYPE':'SimpleCache'})
 
 from app.graphql import query, schema

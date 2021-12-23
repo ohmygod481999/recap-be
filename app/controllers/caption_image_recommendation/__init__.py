@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request, flash
 from app import app
 from app.models.caption import Caption, caption_schema, captions_schema
+from app.models.tag import Tag, tags_schema
+from app.models.caption_tag import CaptionTag
 from app.controllers.caption_image_recommendation.caption import caption_image_beam_search, CaptionRecommendation
 from app.controllers.caption_image_recommendation.translate import translate
 from werkzeug.utils import secure_filename
@@ -44,6 +46,9 @@ query_captions = db.session.query(
         Caption.id,
         Caption.content).all()
 captions = captions_schema.dump(query_captions)
+for caption in captions:
+    caption['tags'] = tags_schema.dump(db.session.query(Tag.id, Tag.name).join(
+        CaptionTag, Tag.id == CaptionTag.tag_id).where(CaptionTag.caption_id == caption['id']).all())
 caption_decommendation = CaptionRecommendation(captions)
 
 @caption_image_recommendation_controllers.route("/")
