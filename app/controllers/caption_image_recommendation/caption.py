@@ -13,6 +13,7 @@ import re
 from nltk.tokenize import word_tokenize
 import spacy
 import vi_core_news_lg
+import os
 
 spacy_vi = spacy.load("vi_core_news_lg")
 
@@ -23,7 +24,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # model = models.KeyedVectors.load_word2vec_format(model_path, binary=True)
 
 stopwords = []
-with open("caption_model/vietnamese-stopwords-dash.txt", "r", encoding="utf8") as f:
+with open(os.path.join("caption_model","vietnamese-stopwords-dash.txt"), "r", encoding="utf8") as f:
   stopwords = f.read().split("\n")
 
 def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=3):

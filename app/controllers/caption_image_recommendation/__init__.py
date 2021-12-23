@@ -19,8 +19,8 @@ from app.db import db
 
 # model_path = "caption_model\my_model\dummy.pth.tar"
 # word_map_path = "caption_model\my_model\WORDMAP_flickr8k_5_cap_per_img_5_min_word_freq.json"
-model_path = "caption_model\BEST_checkpoint_coco_5_cap_per_img_5_min_word_freq.pth.tar"
-word_map_path = "caption_model\WORDMAP_coco_5_cap_per_img_5_min_word_freq.json"
+model_path = os.path.join("caption_model","BEST_checkpoint_coco_5_cap_per_img_5_min_word_freq.pth.tar")
+word_map_path = os.path.join("caption_model","WORDMAP_coco_5_cap_per_img_5_min_word_freq.json")
 
 with open(word_map_path, 'r') as j:
     word_map = json.load(j)
@@ -50,13 +50,6 @@ for caption in captions:
     caption['tags'] = tags_schema.dump(db.session.query(Tag.id, Tag.name).join(
         CaptionTag, Tag.id == CaptionTag.tag_id).where(CaptionTag.caption_id == caption['id']).all())
 caption_decommendation = CaptionRecommendation(captions)
-
-@caption_image_recommendation_controllers.route("/")
-def get_index():
-    seq, alphas = caption_image_beam_search(encoder, decoder, "C:\\Users\\vuong\\OneDrive\\Pictures\\download.jfif", word_map, beam_size)
-    words = [rev_word_map[ind] for ind in seq]
-
-    return " ".join(words)
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
