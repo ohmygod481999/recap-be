@@ -7,9 +7,24 @@ import skimage.transform
 import argparse
 from imageio import imread
 from PIL import Image
+import nltk
+nltk.download('punkt')
+import re
+from nltk.tokenize import word_tokenize
+import spacy
+import vi_core_news_lg
+
+spacy_vi = spacy.load("vi_core_news_lg")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# model_path = "D:\DuAn\recap-be\caption_model\wiki.vi.model.bin"
+# from gensim import models
+# model = models.KeyedVectors.load_word2vec_format(model_path, binary=True)
+
+stopwords = []
+with open("caption_model/vietnamese-stopwords-dash.txt", "r", encoding="utf8") as f:
+  stopwords = f.read().split("\n")
 
 def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=3):
     """
@@ -144,3 +159,21 @@ def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=
     alphas = complete_seqs_alpha[i]
 
     return seq, alphas
+
+class CaptionRecommendation:
+  def __init__(self, captions):
+    self.captions = captions
+
+  def recommend(self, query_string, number):
+    similarities = [spacy_vi(query_string).similarity(spacy_vi(caption["content"])) for caption in self.captions]
+    sort_index = np.argsort(similarities)
+    results = []
+    for i in range(len(similarities) - 1 ,len(similarities) - 1-number,-1):
+        c = {
+            "point": similarities[sort_index[i]],
+            "id": self.captions[sort_index[i]]["id"],
+            "content": self.captions[sort_index[i]]["content"],
+        }
+        results.append(c)
+        print(similarities[sort_index[i]], self.captions[sort_index[i]])
+    return results
