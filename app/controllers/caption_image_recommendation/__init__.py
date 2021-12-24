@@ -12,6 +12,7 @@ import torch
 import json
 from app.models.caption import Caption, caption_schema, captions_schema
 from PIL import Image
+from flask_cors import CORS, cross_origin
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -62,6 +63,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @caption_image_recommendation_controllers.route("/recommend", methods=["POST"])
+@cross_origin()
 def post_file():
     response = {
         "data": None,
