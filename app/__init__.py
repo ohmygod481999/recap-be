@@ -14,7 +14,7 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/caption_image_recommendation/*": {"origins": "*"}})
 cache = Cache(app, config={'CACHE_TYPE':'SimpleCache'})
 
 from app.graphql import query, schema
