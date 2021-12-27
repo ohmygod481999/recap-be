@@ -27,7 +27,7 @@ def add_caption_resolver(obj, info, content, status):
     return payload
 
 @convert_kwargs_to_snake_case
-def update_user_resolver(obj, info, uid, display_name, phone_number, photo_url):
+def update_user_resolver(obj, info, uid, display_name=None, phone_number=None, photo_url=None):
     try:
         user_updated = update_user(uid, display_name=display_name, phone_number=phone_number, photo_url=photo_url)
         # user_updated = update_user(uid)
