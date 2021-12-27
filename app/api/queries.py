@@ -126,7 +126,7 @@ def addCaption_resolver(obj, info, content, status):
         }
     return payload
 
-@cache.memoize(100)
+@cache.memoize(60)
 def get_newfeed(obj, info, limit, offset):
     start = time.time()
     try:
@@ -140,6 +140,7 @@ def get_newfeed(obj, info, limit, offset):
                 Caption.category_id,
                 Users.firebase_uid)
             .join(Users, Caption.author_id == Users.id)
+            .where(Caption.status == 1)
             .order_by(Caption.created_at.desc())
             .limit(int(limit))
             .offset(int(offset))
