@@ -34,18 +34,11 @@ def add_caption():
     return caption_schema.jsonify(caption)
 
 
-@caption_controllers.route('/update-caption/<id>', methods=['PUT'])
-def update_caption(id):
-    caption = Caption.query.get(id)
-
-    content = request.json['content']
-    author_id = request.json['author_id']
-
-    caption.content = content
-    caption.author_id = author_id
-
-    db.session.commit()
-    return caption_schema.jsonify(caption)
+@caption_controllers.route('/caption-approved', methods=['POST'])
+def update_caption():
+    body = request.json
+    print(body)
+    return "success"
 
 
 @caption_controllers.route('/delete-caption/<id>', methods=['DELETE'])
