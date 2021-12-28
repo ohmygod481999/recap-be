@@ -136,12 +136,13 @@ def get_newfeed(obj, info, limit, offset):
                 Caption.content,
                 Caption.author_id,
                 Caption.created_at,
+                Caption.release_at,
                 Caption.status,
                 Caption.category_id,
                 Users.firebase_uid)
             .join(Users, Caption.author_id == Users.id)
-            .where(Caption.status == 1)
-            .order_by(Caption.created_at.desc())
+            .where(Caption.status == 1, Caption.release_at != None)
+            .order_by(Caption.release_at.desc())
             .limit(int(limit))
             .offset(int(offset))
             .all()

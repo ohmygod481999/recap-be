@@ -51,6 +51,7 @@ type CaptionNewFeed{
     id: ID!
     content: String!
     created_at: String!
+    release_at: String
     category_id: ID!
     status: Int!
     vote_number: Int
