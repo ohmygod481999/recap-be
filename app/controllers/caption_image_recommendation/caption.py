@@ -209,7 +209,6 @@ class CaptionRecommendation:
             "tags": match_emotion_captions[sort_index[i]]["tags"],
         }
         results.append(c)
-        print(similarities[sort_index[i]]['content'], match_emotion_captions[sort_index[i]])
     return results
 
 class EmotionSocialImageDetector:
