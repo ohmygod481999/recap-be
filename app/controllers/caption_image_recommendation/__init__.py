@@ -1,13 +1,18 @@
 from flask import Blueprint, jsonify, request, flash
 from app import app
 from app.models.caption import Caption, caption_schema, captions_schema
-from app.controllers.caption_image_recommendation.caption import caption_image_beam_search
+from app.models.tag import Tag, tags_schema
+from app.models.caption_tag import CaptionTag
+from app.controllers.caption_image_recommendation.caption import caption_image_beam_search, CaptionRecommendation \
+    , EmotionSocialImageDetector
 from app.controllers.caption_image_recommendation.translate import translate
 from werkzeug.utils import secure_filename
 import os
 import torch
 import json
 from app.models.caption import Caption, caption_schema, captions_schema
+from PIL import Image
+from flask_cors import CORS, cross_origin
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -17,8 +22,8 @@ from app.db import db
 
 # model_path = "caption_model\my_model\dummy.pth.tar"
 # word_map_path = "caption_model\my_model\WORDMAP_flickr8k_5_cap_per_img_5_min_word_freq.json"
-model_path = "caption_model\BEST_checkpoint_coco_5_cap_per_img_5_min_word_freq.pth.tar"
-word_map_path = "caption_model\WORDMAP_coco_5_cap_per_img_5_min_word_freq.json"
+model_path = os.path.join("caption_model","BEST_checkpoint_coco_5_cap_per_img_5_min_word_freq.pth.tar")
+word_map_path = os.path.join("caption_model","WORDMAP_coco_5_cap_per_img_5_min_word_freq.json")
 
 with open(word_map_path, 'r') as j:
     word_map = json.load(j)
@@ -39,14 +44,18 @@ with open(word_map_path, 'r') as j:
 rev_word_map = {v: k for k, v in word_map.items()}  # ix2word
 
 # Encode, decode with attention and beam search
-
-
-@caption_image_recommendation_controllers.route("/")
-def get_index():
-    seq, alphas = caption_image_beam_search(encoder, decoder, "C:\\Users\\vuong\\OneDrive\\Pictures\\download.jfif", word_map, beam_size)
-    words = [rev_word_map[ind] for ind in seq]
-
-    return " ".join(words)
+query_captions = Caption.query.all()
+query_captions = db.session.query(
+        Caption.id,
+        Caption.content,
+        Caption.emotion).all()
+captions = captions_schema.dump(query_captions)
+print(captions[:2])
+for caption in captions:
+    caption['tags'] = tags_schema.dump(db.session.query(Tag.id, Tag.name).join(
+        CaptionTag, Tag.id == CaptionTag.tag_id).where(CaptionTag.caption_id == caption['id']).all())
+caption_decommendation = CaptionRecommendation(captions)
+emotionSocialImageDetector = EmotionSocialImageDetector()
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
@@ -54,6 +63,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @caption_image_recommendation_controllers.route("/recommend", methods=["POST"])
+@cross_origin()
 def post_file():
     response = {
         "data": None,
@@ -66,6 +76,10 @@ def post_file():
         return jsonify(response)
 
     file = request.files['file']
+    if request.form['num_cap']:
+        num_cap = int(request.form['num_cap'])
+    else:
+        num_cap = 5
 
     if file.filename == '':
         response["error"] = "No selected file"
@@ -75,6 +89,9 @@ def post_file():
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
+        image = Image.open(filepath)
+        
+        label_emotion = emotionSocialImageDetector.predict(image)
 
         seq, alphas = caption_image_beam_search(encoder, decoder, filepath, word_map, beam_size)
         os.remove(filepath)
@@ -83,13 +100,15 @@ def post_file():
         caption = " ".join(words)
         translated_caption = translate(caption)
 
-        query_captions = Caption.query.all()
-        captions = captions_schema.dump(query_captions)
-
-        print(captions[:5])
+        recommend_captions = caption_decommendation.recommend(translated_caption, emotionSocialImageDetector.classes[label_emotion], num_cap)
+        
 
         response["is_success"] = True
-        response["data"] = translated_caption
+        response["data"] = {
+            "describe_image" : translated_caption,
+            "captions": recommend_captions,
+            "emotion": emotionSocialImageDetector.classes[label_emotion],
+        }
 
         return jsonify(response)
 

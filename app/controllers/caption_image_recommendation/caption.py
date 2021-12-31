@@ -1,4 +1,6 @@
 import torch
+from torch import nn
+import torchvision.models as models
 import torch.nn.functional as F
 import numpy as np
 import json
@@ -7,9 +9,26 @@ import skimage.transform
 import argparse
 from imageio import imread
 from PIL import Image
+import nltk
+nltk.download('punkt')
+import re
+from nltk.tokenize import word_tokenize
+import spacy
+import vi_core_news_lg
+import os
+from scipy.stats import norm
+
+spacy_vi = spacy.load("vi_core_news_lg")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# model_path = "D:\DuAn\recap-be\caption_model\wiki.vi.model.bin"
+# from gensim import models
+# model = models.KeyedVectors.load_word2vec_format(model_path, binary=True)
+
+stopwords = []
+with open(os.path.join("caption_model","vietnamese-stopwords-dash.txt"), "r", encoding="utf8") as f:
+  stopwords = f.read().split("\n")
 
 def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=3):
     """
@@ -144,3 +163,76 @@ def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=
     alphas = complete_seqs_alpha[i]
 
     return seq, alphas
+
+class CaptionRecommendation:
+  def __init__(self, captions):
+    self.captions = captions
+    for caption in self.captions:
+      caption["vector"] = self.vectorize(caption["content"])
+
+  def vectorize(self, doc: str):
+    cleaned_doc = re.sub(f"[^\w]", " ", doc.lower())
+    # tokens = word_tokenize(cleaned_doc)
+    # non_stopword_tokens = [token for token in tokens if token not in stopwords]
+    # sen = " ".join(non_stopword_tokens)
+    sen = cleaned_doc
+    # vecs = []
+    # tokens = spacy_vi(sen)
+    # for token in tokens:
+    #   vecs.append(token.vector)
+
+    vecs = [token.vector for token in spacy_vi(sen)]
+    return np.mean(vecs, axis=0)
+
+  def _cosine_sim(self, vecA, vecB):
+    csim = np.dot(vecA, vecB)/(np.linalg.norm(vecA)*np.linalg.norm(vecB))
+    if np.isnan(np.sum(csim)):
+      return 0
+    return csim
+
+  # emotion: 'joy', 'sad'
+  def recommend(self, query_string, emotion, number):
+    emotion_index = 1 if emotion == 'joy' else 0
+    match_emotion_captions = [caption for caption in self.captions if caption['emotion'] == emotion_index]
+
+    query_string_vector = self.vectorize(query_string)
+    n = norm(10, 1)
+    similarities = [self._cosine_sim(query_string_vector, caption["vector"]) * (1 + n.pdf(len(word_tokenize(query_string))))  for caption in match_emotion_captions]
+    # similarities = [spacy_vi(query_string).similarity(spacy_vi(caption["content"])) for caption in match_emotion_captions]
+    sort_index = np.argsort(similarities)
+    results = []
+    for i in range(len(similarities) - 1 ,len(similarities) - 1-number,-1):
+        c = {
+            "point": similarities[sort_index[i]],
+            "id": match_emotion_captions[sort_index[i]]["id"],
+            "content": match_emotion_captions[sort_index[i]]["content"],
+            "tags": match_emotion_captions[sort_index[i]]["tags"],
+        }
+        results.append(c)
+    return results
+
+class EmotionSocialImageDetector:
+  def __init__(self):
+    self.classes = ['joy', 'sad']
+    emotion_model = models.resnet50()
+    num_ftrs = emotion_model.fc.in_features
+    emotion_model.fc = nn.Linear(num_ftrs, len(self.classes))
+    emotion_model = emotion_model.to(device)
+    emotion_model.load_state_dict(torch.load(os.path.join("caption_model","emotion_model_resnet50.dat"), map_location='cpu'))
+    self.model = emotion_model
+    self.transform = transforms.Compose([
+      transforms.Resize(255),
+      transforms.CenterCrop(224),
+      transforms.ToTensor(),
+    ])
+    self.samples = torch.load(os.path.join("caption_model","samples.pt"), map_location=torch.device('cpu'))
+
+  def predict(self, image):
+    image = self.transform(image)
+    image = image.unsqueeze_(0).to(device)
+    with torch.no_grad():
+      images = torch.cat([image, self.samples], dim = 0)
+      pred = self.model(images)
+      pred = torch.argmax(pred[0])
+      return pred.item()
+      # return self.classes[pred.item()]

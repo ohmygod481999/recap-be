@@ -3,7 +3,7 @@ options = webdriver.ChromeOptions()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
-driver = webdriver.Chrome('C:\\webdrivers\\chromedriver.exe',options=options)
+driver = webdriver.Chrome('chromedriver',options=options)
 from selenium.webdriver.support.ui import WebDriverWait
 import urllib
 from selenium.webdriver.support import expected_conditions as EC
