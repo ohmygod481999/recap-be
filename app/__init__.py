@@ -30,8 +30,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from app.controllers.caption import caption_controllers
 app.register_blueprint(caption_controllers)
-from app.controllers.caption_image_recommendation import caption_image_recommendation_controllers
-app.register_blueprint(caption_image_recommendation_controllers)
+# from app.controllers.caption_image_recommendation import caption_image_recommendation_controllers
+# app.register_blueprint(caption_image_recommendation_controllers)
 
 @app.route("/graphql", methods=["GET"])
 def graphql_playground():
@@ -53,4 +53,4 @@ def graphql_server():
 
 @app.route('/')
 def get_index():
-    return "hello phuong"
+    return "recap flask hello!"

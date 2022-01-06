@@ -29,6 +29,11 @@ type Tag {
     caption: [Caption!]
 }
 
+type Voting {
+    id: ID
+    user_id: String
+}
+
 type CustomClaims {
     isAdmin: Boolean
 }
@@ -55,6 +60,7 @@ type CaptionNewFeed{
     category_id: ID!
     status: Int!
     vote_number: Int
+    votings: [Voting]
     comments: [Comment]
     tag: [Tag]
     author: Author!
@@ -91,6 +97,18 @@ type CaptionResponse {
     author: Author!
 }
 
+type TopUser {
+    id: ID!
+    info: Author
+    caption_count: Int
+}
+
+type TopUsersResponse {
+    success: Boolean!
+    errors: [String]
+    data: [TopUser]
+}
+
 type Response {
     success: Boolean!
     errors: [String]
@@ -104,7 +122,7 @@ type Query {
     listCommentOfCaption(caption_id: ID!): CommentsResponse!
     getNewFeed(limit: Int!, offset: Int!): CaptionsNewFeedResponse!
     userDetail(firebase_uid: String!): AuthorResponse!
-
+    getTopUsers: TopUsersResponse!
 }
 
 type Mutation {

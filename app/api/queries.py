@@ -1,5 +1,5 @@
 from app.models.caption import Caption, captions_schema, captionfirebase_schemas
-from app.models.users import Users, author_schema
+from app.models.users import Users, author_schema, users_schema
 from app.models.voting import Voting, votings_schema
 from app.models.comment import Comment, comments_schema
 from app.models.caption_tag import CaptionTag
@@ -125,7 +125,7 @@ def addCaption_resolver(obj, info, content, status):
         }
     return payload
 
-@cache.memoize(60)
+@cache.memoize(150)
 def get_newfeed(obj, info, limit, offset):
     start = time.time()
     try:
@@ -138,7 +138,8 @@ def get_newfeed(obj, info, limit, offset):
                 Caption.release_at,
                 Caption.status,
                 Caption.category_id,
-                Users.firebase_uid)
+                Users.firebase_uid
+            )
             .join(Users, Caption.author_id == Users.id)
             .where(Caption.status == 1, Caption.release_at != None)
             .order_by(Caption.release_at.desc())
@@ -149,15 +150,17 @@ def get_newfeed(obj, info, limit, offset):
         for caption in all_captions:
             caption['tag'] = tags_schema.dump(db.session.query(Tag.id, Tag.name).join(
                 CaptionTag, Tag.id == CaptionTag.tag_id).where(CaptionTag.caption_id == caption['id']).all())
+            # caption['votes'] = votings_schema.dump(db.session.query(Voting.user_id).where(Voting.caption_id == caption['id']).all())
             caption['author'] = author_schema.dump(
                 get_user(caption['firebase_uid']))
-            votes = votings_schema.dump(db.session.query(Voting.id).where(Voting.caption_id == caption['id']).all())
+            votes = votings_schema.dump(db.session.query(Voting.id, Voting.user_id).where(Voting.caption_id == caption['id']).all())
             comments = comments_schema.dump(db.session.query(Comment.id, Comment.content, Comment.created_at, Comment.user_id).where(Comment.caption_id == caption['id']).all())
             for comment in comments:
                 childrenComments = comments_schema.dump(db.session.query(Comment.id, Comment.content, Comment.created_at, Comment.user_id).where(Comment.parent_comment_id == comment['id']).all())
                 comment["comments"] = childrenComments
             caption['comments'] = comments
             caption['vote_number'] = len(votes)
+            caption['votings'] = votes
         print("Time Load: " + str(time.time() - start))
         payload = {
             "success": True,
@@ -165,6 +168,28 @@ def get_newfeed(obj, info, limit, offset):
         }
     except Exception as error:
         print(error)
+        payload = {
+            "success": False,
+            "errors": [str(error)]
+        }
+    return payload
+
+def getTopUsers_resolver(obj, info):
+    try:
+        print("users_schema.dumb")
+        users = (db.session.query(Users.id, Users.firebase_uid).all())
+        users = [{'id': str(user[0]), 'firebase_uid': user[1]} for user in users]
+        for user in users:
+            user['info'] = author_schema.dump(
+                get_user(user['firebase_uid']))
+            captions = db.session.query(Caption.id).where(Caption.author_id == user['id']).all()
+            user['caption_count'] = len(captions)
+        
+        payload = {
+            "success": True,
+            "data": sorted(users, key=lambda x: x["caption_count"], reverse=True)
+        }
+    except Exception as error:
         payload = {
             "success": False,
             "errors": [str(error)]
